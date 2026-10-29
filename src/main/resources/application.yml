@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: motu-back
+  datasource:
+    # 로컬 기본값은 compose.yaml의 MySQL. 배포 환경에서는 환경 변수로 덮어쓴다
+    url: ${DB_URL:jdbc:mysql://localhost:3306/motu}
+    username: ${DB_USERNAME:motu}
+    password: ${DB_PASSWORD:motu}
+  jpa:
+    # 스키마는 Flyway가 만들고, JPA는 엔티티와 맞는지만 확인한다
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
