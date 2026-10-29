@@ -34,3 +34,9 @@ motu:
     secret: ${JWT_SECRET:}
     access-token-ttl: 15m
     refresh-token-ttl: 14d
+  kis:
+    # 키가 없으면 꺼 둔다. 꺼져 있으면 저장된 마지막 가격만 보여 준다
+    enabled: ${KIS_ENABLED:false}
+    base-url: ${KIS_BASE_URL:https://openapi.koreainvestment.com:9443}
+    app-key: ${KIS_APP_KEY:}
+    app-secret: ${KIS_APP_SECRET:}
