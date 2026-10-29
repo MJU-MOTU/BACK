@@ -11,6 +11,10 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   flyway:
     enabled: true
 
@@ -23,3 +27,10 @@ management:
     health:
       probes:
         enabled: true
+
+motu:
+  jwt:
+    # 기본값이 없다. 비어 있거나 32바이트보다 짧으면 서버가 뜨지 않는다 (로컬은 local 프로필)
+    secret: ${JWT_SECRET:}
+    access-token-ttl: 15m
+    refresh-token-ttl: 14d

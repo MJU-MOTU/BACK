@@ -1,0 +1,4 @@
+# 로컬 개발 전용. 실행: ./gradlew bootRun --args='--spring.profiles.active=local'
+motu:
+  jwt:
+    secret: local-dev-only-secret-do-not-use-in-prod-0123456789
