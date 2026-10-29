@@ -15,12 +15,31 @@ Docker와 JDK 21이 필요합니다.
 
 ```bash
 docker compose up -d
-./gradlew bootRun
+./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
 - 헬스체크: http://localhost:8080/actuator/health
+- `local` 프로필은 개발용 JWT 비밀키를 씁니다. 프로필 없이 띄우면 `JWT_SECRET`이 없어서 서버가 시작되지 않습니다.
 
-DB 접속 정보는 환경 변수 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`로 바꿀 수 있습니다. 기본값은 `compose.yaml`의 MySQL입니다.
+## 환경 변수
+
+| 이름 | 설명 | 기본값 |
+| --- | --- | --- |
+| `DB_URL` | JDBC URL | `jdbc:mysql://localhost:3306/motu` |
+| `DB_USERNAME` / `DB_PASSWORD` | DB 계정 | `motu` / `motu` |
+| `JWT_SECRET` | Access 토큰 서명 키 (32바이트 이상) | 없음 (필수) |
+
+## API
+
+| 메서드 | 경로 | 설명 |
+| --- | --- | --- |
+| POST | `/api/v1/auth/signup` | 회원가입 |
+| POST | `/api/v1/auth/login` | 로그인 (Access 15분 + Refresh 14일) |
+| POST | `/api/v1/auth/refresh` | 토큰 재발급 (Refresh 토큰 회전) |
+| POST | `/api/v1/auth/logout` | Refresh 토큰 폐기 |
+| GET | `/api/v1/me` | 내 정보 (`Authorization: Bearer`) |
+
+에러는 RFC 9457 Problem Details 형식이며, 프론트는 `code` 필드로 분기합니다.
 
 ## 테스트
 
