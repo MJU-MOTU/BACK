@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # 한글 테스트 이름으로 리포트 파일을 만들 때 로케일이 UTF-8이 아니면 실패한다
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # 테스트는 Testcontainers로 MySQL을 띄운다 (러너에 Docker가 있다)
+      - name: 빌드·테스트
+        run: ./gradlew build
