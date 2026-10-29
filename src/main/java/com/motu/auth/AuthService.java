@@ -13,6 +13,7 @@ import com.motu.common.error.BusinessException;
 import com.motu.common.error.ErrorCode;
 import com.motu.user.User;
 import com.motu.user.UserRepository;
+import com.motu.wallet.WalletService;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,17 +27,19 @@ public class AuthService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenIssuer tokenIssuer;
+	private final WalletService walletService;
 	private final Clock clock;
 
 	// 없는 이메일로 로그인해도 비밀번호 비교 시간을 들여, 응답 시간으로 가입 여부를 알 수 없게 한다
 	private final String dummyPasswordHash;
 
 	AuthService(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository,
-			PasswordEncoder passwordEncoder, TokenIssuer tokenIssuer, Clock clock) {
+			PasswordEncoder passwordEncoder, TokenIssuer tokenIssuer, WalletService walletService, Clock clock) {
 		this.userRepository = userRepository;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.tokenIssuer = tokenIssuer;
+		this.walletService = walletService;
 		this.clock = clock;
 		this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
 	}
@@ -56,6 +59,8 @@ public class AuthService {
 		catch (DataIntegrityViolationException e) {
 			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
 		}
+		// 가입하면 가상 현금이 든 지갑이 같이 생긴다(US-1). 같은 트랜잭션이라 지갑 없는 회원은 생기지 않는다
+		walletService.open(user.getId());
 		return new SignupResponse(user.getId(), user.getEmail(), user.getNickname());
 	}
 

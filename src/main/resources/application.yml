@@ -40,3 +40,6 @@ motu:
     base-url: ${KIS_BASE_URL:https://openapi.koreainvestment.com:9443}
     app-key: ${KIS_APP_KEY:}
     app-secret: ${KIS_APP_SECRET:}
+  wallet:
+    # 가입할 때 지갑에 넣어 주는 가상 현금(원)
+    initial-cash: 10000000
