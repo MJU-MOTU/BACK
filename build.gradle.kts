@@ -41,5 +41,10 @@ dependencies {
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform()
+	// 동시성 전략 비교 실험(@Tag("experiment"))은 오래 걸려 평소 테스트·CI에서는 뺀다. 실행: ./gradlew test -Pexperiments
+	useJUnitPlatform {
+		if (!project.hasProperty("experiments")) {
+			excludeTags("experiment")
+		}
+	}
 }
