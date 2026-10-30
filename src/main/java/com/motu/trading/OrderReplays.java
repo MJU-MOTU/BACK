@@ -25,7 +25,9 @@ class OrderReplays {
 		this.ledgerEntryRepository = ledgerEntryRepository;
 	}
 
-	@Transactional(readOnly = true)
+	// 체결 트랜잭션 안에서도 불린다. 거절·키 충돌을 예외로 알릴 때 바깥 트랜잭션을 롤백 전용으로 표시하면
+	// 바깥이 커밋하다 UnexpectedRollbackException(500)이 나므로, BusinessException으로는 롤백 표시를 하지 않는다
+	@Transactional(readOnly = true, noRollbackFor = BusinessException.class)
 	Optional<OrderResult> find(Long userId, OrderCommand command) {
 		return orderRepository.findByUserIdAndIdempotencyKey(userId, command.idempotencyKey()).map(order -> {
 			if (!order.sameRequestAs(command)) {
