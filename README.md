@@ -58,6 +58,8 @@ docker compose up -d
 - 잔고는 원장 합계와 항상 같습니다. 금액은 원 단위 `long`이고, 평균단가는 저장하지 않고 총매입금액에서 계산합니다.
 - 장이 끝났거나 KIS가 실패하면 마지막으로 받은 가격으로 체결하고 `priceSource: STORED`로 남깁니다. 수수료는 0원입니다.
 
+동시 주문 제어 방식(비관적 락 / 낙관적 락 / 조건부 UPDATE) 비교 실험: [docs/experiments/d4-concurrency.md](docs/experiments/d4-concurrency.md)
+
 ## 시세
 
 - 현재가는 5초 동안 메모리에 캐시하고, 받은 값은 `stock_prices`에 마지막 가격으로 저장합니다.
