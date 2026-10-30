@@ -90,6 +90,22 @@ class OrderConcurrencyTests {
 			.getTotalElements()).isEqualTo(1);
 	}
 
+	// 잔고 부족으로 거절될 주문을 더블클릭한 상황. 잠금을 기다린 요청은 잠금 안에서 같은 키를 다시 확인하고
+	// 처음 결과(거절)를 그대로 돌려줘야 한다. 500(UnexpectedRollbackException)이 나면 안 된다
+	@Test
+	void 거절될_주문을_같은_키로_동시에_보내도_모두_같은_거절을_받는다() throws Exception {
+		Long userId = testUsers.create();
+		setPrice(LG_ELECTRONICS, 100_000);
+		String key = UUID.randomUUID().toString();
+
+		Outcomes outcomes = runConcurrently(10, i -> () -> orderService.place(userId, buy(200, key)));
+
+		assertThat(outcomes.unexpected).isEmpty();
+		assertThat(outcomes.rejectedWith(ErrorCode.INSUFFICIENT_CASH)).isEqualTo(10);
+		assertThat(orderRepository.findByUserIdOrderByIdDesc(userId, org.springframework.data.domain.Pageable.unpaged())
+			.getTotalElements()).isEqualTo(1);
+	}
+
 	@Test
 	void 보유_10주를_10주씩_5건_동시에_팔면_1건만_체결된다() throws Exception {
 		Long userId = testUsers.create();
