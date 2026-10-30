@@ -48,3 +48,8 @@ tasks.withType<Test> {
 		}
 	}
 }
+
+// Dockerfile이 버전과 상관없이 같은 이름으로 찾도록 고정한다
+tasks.bootJar {
+	archiveFileName = "app.jar"
+}

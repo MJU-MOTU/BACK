@@ -31,6 +31,19 @@ docker compose up -d
 | `KIS_ENABLED` | 한국투자증권 Open API로 실시간 시세를 받을지 | `false` |
 | `KIS_APP_KEY` / `KIS_APP_SECRET` | KIS 앱키 (`KIS_ENABLED=true`일 때 필수) | 없음 |
 | `KIS_BASE_URL` | KIS 주소 | 실전 `https://openapi.koreainvestment.com:9443` |
+| `CORS_ALLOWED_ORIGINS` | 프론트 주소(쉼표로 구분). 비어 있으면 다른 출처의 브라우저 요청을 막음 | 없음 (`local` 프로필은 `localhost:5173`, `4173`) |
+| `PORT` | 서버 포트. 배포 플랫폼이 넣어 줌 | `8080` |
+| `JAVA_TOOL_OPTIONS` | JVM 옵션. 사용량 과금 플랫폼에서는 `-Xmx256m`처럼 힙 상한을 정함 | 없음 (이미지는 컨테이너 메모리의 50%) |
+
+## 배포
+
+`Dockerfile`(빌드 JDK 21 → 실행 JRE 21, 비루트, `/actuator/health` 헬스체크)로 이미지를 만듭니다. MySQL과 함께 로컬에서 띄워 보려면:
+
+```bash
+docker compose --profile app up -d --build --wait
+```
+
+플랫폼 비교, Railway·Cloudflare 설정 순서, 메모리 측정: [docs/deploy.md](docs/deploy.md)
 
 ## API
 

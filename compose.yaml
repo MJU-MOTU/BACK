@@ -1,4 +1,5 @@
 # 로컬 개발용 MySQL. 실행: docker compose up -d
+# 배포 이미지까지 함께 띄우기: docker compose --profile app up -d --build --wait
 services:
   mysql:
     image: mysql:8.4
@@ -12,6 +13,28 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    # 초기화 중에는 소켓으로만 뜨는 임시 서버가 있어서, TCP로 접속돼야 준비된 것으로 본다
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "127.0.0.1", "-u", "motu", "-pmotu", "-e", "SELECT 1", "motu"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  back:
+    profiles: [app]
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/motu
+      DB_USERNAME: motu
+      DB_PASSWORD: motu
+      # 로컬 확인용 값. 배포 환경에서는 플랫폼의 비밀 변수로 넣는다
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-secret-do-not-use-in-prod-0123456789}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:4173}
+    ports:
+      - "8080:8080"
 
 volumes:
   mysql-data:
