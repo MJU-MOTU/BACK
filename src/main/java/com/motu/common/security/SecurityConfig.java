@@ -2,6 +2,8 @@ package com.motu.common.security;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Duration;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,6 +23,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -31,6 +36,8 @@ public class SecurityConfig {
 		http
 			// 쿠키 세션을 쓰지 않고 Authorization 헤더로만 인증하므로 CSRF 토큰이 필요 없다
 			.csrf(csrf -> csrf.disable())
+			// 인증 필터보다 앞에서 처리해야 401 응답에도 CORS 헤더가 붙어 프론트가 토큰 재발급을 시도할 수 있다
+			.cors(Customizer.withDefaults())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/auth/**", "/actuator/health", "/actuator/health/**", "/error").permitAll()
@@ -40,6 +47,20 @@ public class SecurityConfig {
 				.authenticationEntryPoint(entryPoint))
 			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(entryPoint));
 		return http.build();
+	}
+
+	@Bean
+	CorsConfigurationSource corsConfigurationSource(CorsProperties properties) {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(properties.allowedOrigins());
+		config.setAllowedMethods(List.of("GET", "POST"));
+		config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key"));
+		// 쿠키를 쓰지 않으므로 자격 증명(credentials)은 허용하지 않는다
+		config.setMaxAge(Duration.ofHours(1));
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/api/**", config);
+		return source;
 	}
 
 	@Bean

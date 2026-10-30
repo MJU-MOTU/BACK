@@ -1,0 +1,7 @@
+# 빌드 컨텍스트에는 Gradle 빌드에 필요한 것만 보낸다
+*
+!gradlew
+!gradle/
+!settings.gradle.kts
+!build.gradle.kts
+!src/main/

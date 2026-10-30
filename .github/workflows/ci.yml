@@ -25,3 +25,16 @@ jobs:
       # 테스트는 Testcontainers로 MySQL을 띄운다 (러너에 Docker가 있다)
       - name: 빌드·테스트
         run: ./gradlew build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 배포 이미지를 MySQL과 함께 띄워, DB 연결까지 포함한 헬스체크가 healthy가 되는지 본다
+      - name: 이미지 빌드·기동
+        run: docker compose --profile app up -d --build --wait --wait-timeout 300
+
+      - name: 실패하면 로그
+        if: failure()
+        run: docker compose --profile app logs

@@ -2,3 +2,6 @@
 motu:
   jwt:
     secret: local-dev-only-secret-do-not-use-in-prod-0123456789
+  cors:
+    # vite 개발 서버(5173)는 /api를 프록시로 넘겨 같은 출처로 보이지만, 백엔드를 직접 부르는 경우(vite preview 4173 등)를 위해 연다
+    allowed-origins: http://localhost:5173,http://localhost:4173
