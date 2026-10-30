@@ -54,11 +54,13 @@ docker compose up -d
 
 - 가입하면 가상 현금 1,000만 원이 든 지갑과 원장 첫 줄(INITIAL)이 생깁니다.
 - 주문은 지갑 행을 `SELECT ... FOR UPDATE`로 잠근 뒤 체결합니다. 같은 회원의 주문은 한 줄로 처리됩니다.
+- 같은 회원의 주문은 DB 커넥션을 빌리기 전에 서버 안에서 먼저 줄을 세웁니다(`UserOrderLocks`). 한 회원의 주문이 몰려도 다른 회원 주문이 커넥션을 기다리지 않습니다.
 - 시세 조회(KIS HTTP)는 잠금 전에 끝냅니다. 체결 트랜잭션은 첫 문장이 지갑 잠금이고 격리 수준은 READ COMMITTED입니다. MySQL 기본값(REPEATABLE READ)은 잠금 전에 찍힌 스냅샷을 계속 보므로, 앞 주문이 바꾼 보유 수량을 못 볼 수 있습니다.
 - 잔고는 원장 합계와 항상 같습니다. 금액은 원 단위 `long`이고, 평균단가는 저장하지 않고 총매입금액에서 계산합니다.
 - 장이 끝났거나 KIS가 실패하면 마지막으로 받은 가격으로 체결하고 `priceSource: STORED`로 남깁니다. 수수료는 0원입니다.
 
-동시 주문 제어 방식(비관적 락 / 낙관적 락 / 조건부 UPDATE) 비교 실험: [docs/experiments/d4-concurrency.md](docs/experiments/d4-concurrency.md)
+- 동시 주문 제어 방식(비관적 락 / 낙관적 락 / 조건부 UPDATE) 비교 실험: [docs/experiments/d4-concurrency.md](docs/experiments/d4-concurrency.md)
+- 주문 경로 성능 조사(주문 1건당 MySQL 문장 30 → 11, 다른 회원 지연 1,095 → 47ms): [docs/experiments/order-path-performance.md](docs/experiments/order-path-performance.md)
 
 ## 시세
 

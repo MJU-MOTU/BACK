@@ -16,7 +16,8 @@ public enum ErrorCode {
 	IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "같은 Idempotency-Key로 다른 주문을 보냈습니다"),
 	INSUFFICIENT_CASH(HttpStatus.UNPROCESSABLE_CONTENT, "잔고가 부족합니다"),
 	INSUFFICIENT_QUANTITY(HttpStatus.UNPROCESSABLE_CONTENT, "보유 수량이 부족합니다"),
-	PRICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "지금은 시세를 가져올 수 없습니다");
+	PRICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "지금은 시세를 가져올 수 없습니다"),
+	ORDER_BUSY(HttpStatus.SERVICE_UNAVAILABLE, "주문이 몰려 처리하지 못했습니다. 잠시 후 다시 시도해 주세요");
 
 	private final HttpStatus status;
 	private final String title;
