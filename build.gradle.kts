@@ -53,3 +53,15 @@ tasks.withType<Test> {
 tasks.bootJar {
 	archiveFileName = "app.jar"
 }
+
+// Lambda 배포 묶음: 핸들러(run.sh) + app.jar. 배포: sam deploy -t deploy/lambda/template.yaml (docs/deploy.md)
+val lambdaZip by tasks.registering(Zip::class) {
+	archiveFileName = "motu-back-lambda.zip"
+	destinationDirectory = layout.buildDirectory.dir("lambda")
+	from(tasks.bootJar)
+	from("deploy/lambda/run.sh") {
+		filePermissions {
+			unix("rwxr-xr-x")
+		}
+	}
+}

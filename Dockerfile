@@ -24,5 +24,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --start-interval=5s --retries=3 \
 	CMD curl -fsS "http://localhost:${PORT:-8080}/actuator/health" > /dev/null || exit 1
 # JVM 기본 최대 힙은 컨테이너 메모리의 25%라서 512MB면 128MB다. 50%면 512MB 제한에서 힙 256MB, 전체 약 340MB(측정값)
-# 메모리 제한이 플랜 최대치로 잡히는 플랫폼(사용량 과금)은 JAVA_TOOL_OPTIONS=-Xmx256m처럼 힙을 직접 정한다 (docs/deploy.md)
+# 메모리 제한이 플랜 최대치로 잡히는 플랫폼(사용량 과금)은 JAVA_TOOL_OPTIONS=-Xmx256m처럼 힙을 직접 정한다
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=50", "-jar", "app.jar"]

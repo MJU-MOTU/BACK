@@ -14,6 +14,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.motu.market.PriceSource;
+import com.motu.market.kis.KisTokenStore.TokenState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,15 +40,16 @@ public class KisClient implements PriceSource {
 	private final RestClient restClient;
 	private final KisProperties properties;
 	private final Clock clock;
+	private final KisTokenStore tokenStore;
 
-	private String accessToken;
-	private Instant tokenRefreshAt = Instant.MIN;
-	private Instant tokenRetryAfter = Instant.MIN;
+	// 저장소에서 마지막으로 읽은 상태. 쓸 수 있거나 재시도 대기 중이면 저장소에 묻지 않는다
+	private TokenState cachedToken = TokenState.EMPTY;
 
-	public KisClient(RestClient.Builder builder, KisProperties properties, Clock clock) {
+	public KisClient(RestClient.Builder builder, KisProperties properties, Clock clock, KisTokenStore tokenStore) {
 		this.restClient = builder.baseUrl(properties.baseUrl()).build();
 		this.properties = properties;
 		this.clock = clock;
+		this.tokenStore = tokenStore;
 	}
 
 	@Override
@@ -117,14 +119,25 @@ public class KisClient implements PriceSource {
 				"custtype", "P");
 	}
 
+	// 서버(Lambda 실행 환경)가 여러 개라 토큰은 저장소에 두고 같이 쓴다. 저장소에도 쓸 토큰이 없을 때만 발급한다
 	private synchronized String accessToken() {
 		Instant now = clock.instant();
-		if (accessToken != null && now.isBefore(tokenRefreshAt)) {
-			return accessToken;
+		if (!cachedToken.usableAt(now) && !cachedToken.waitingAt(now)) {
+			cachedToken = tokenStore.update(current -> {
+				// 기다리는 사이에 다른 서버가 받아 뒀거나, 다른 서버의 발급 실패로 대기 중이면 그대로 쓴다
+				if (current.usableAt(now) || current.waitingAt(now)) {
+					return current;
+				}
+				return issueToken(current, now);
+			});
 		}
-		if (now.isBefore(tokenRetryAfter)) {
+		if (!cachedToken.usableAt(now)) {
 			throw new RestClientException("KIS 토큰 발급 재시도 대기 중");
 		}
+		return cachedToken.accessToken();
+	}
+
+	private TokenState issueToken(TokenState current, Instant now) {
 		try {
 			TokenResponse token = restClient.post()
 				.uri("/oauth2/tokenP")
@@ -136,13 +149,12 @@ public class KisClient implements PriceSource {
 			if (token == null || token.accessToken() == null) {
 				throw new RestClientException("KIS 토큰 발급 응답이 비어 있습니다");
 			}
-			accessToken = token.accessToken();
-			tokenRefreshAt = now.plusSeconds(token.expiresIn()).minus(TOKEN_REFRESH_MARGIN);
-			return accessToken;
+			return new TokenState(token.accessToken(),
+					now.plusSeconds(token.expiresIn()).minus(TOKEN_REFRESH_MARGIN), null);
 		}
 		catch (RestClientException e) {
-			tokenRetryAfter = now.plus(TOKEN_RETRY_BACKOFF);
-			throw e;
+			log.warn("KIS 토큰 발급 실패. {} 동안 다시 요청하지 않습니다", TOKEN_RETRY_BACKOFF, e);
+			return new TokenState(current.accessToken(), current.refreshAt(), now.plus(TOKEN_RETRY_BACKOFF));
 		}
 	}
 

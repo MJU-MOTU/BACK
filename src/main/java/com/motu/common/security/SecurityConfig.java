@@ -12,6 +12,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,6 +42,8 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/auth/**", "/actuator/health", "/actuator/health/**", "/error").permitAll()
+				// lambda 프로필에서만 있는 SnapStart 훅. Lambda Web Adapter가 바깥에서 오는 요청은 이 경로로 넘기지 않는다
+				.requestMatchers(HttpMethod.POST, "/internal/snapstart/**").permitAll()
 				.anyRequest().authenticated())
 			.oauth2ResourceServer(oauth2 -> oauth2
 				.jwt(Customizer.withDefaults())
