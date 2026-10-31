@@ -1,0 +1,10 @@
+# AWS Lambda(SnapStart + Lambda Web Adapter) 전용. 배포 방법은 docs/deploy.md
+spring:
+  datasource:
+    hikari:
+      # 실행 환경 하나는 요청을 한 번에 하나만 처리한다. 주문 준비 트랜잭션 안에서 KIS 토큰을 새 트랜잭션으로
+      # 잠그는 경우까지 2개면 충분하고, 실행 환경이 늘어도 RDS 커넥션을 많이 쓰지 않는다
+      maximum-pool-size: 2
+      minimum-idle: 1
+      # SnapStart 훅이 스냅샷 전에 풀을 멈추려면 필요하다(SnapStartHooks)
+      allow-pool-suspension: true

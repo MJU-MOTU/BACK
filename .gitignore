@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# sam deploy --guided가 만드는 설정. 입력한 파라미터 값이 남을 수 있다
+samconfig.toml
+.aws-sam/

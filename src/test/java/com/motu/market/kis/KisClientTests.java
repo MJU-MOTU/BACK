@@ -43,7 +43,8 @@ class KisClientTests {
 		clock = new MutableClock(Instant.parse("2026-10-29T01:00:00Z"));
 		RestClient.Builder builder = RestClient.builder();
 		server = MockRestServiceServer.bindTo(builder).build();
-		client = new KisClient(builder, new KisProperties(true, BASE, "key", "secret"), clock);
+		client = new KisClient(builder, new KisProperties(true, BASE, "key", "secret"), clock,
+				new InMemoryKisTokenStore());
 	}
 
 	@Test

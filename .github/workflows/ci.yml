@@ -26,6 +26,12 @@ jobs:
       - name: 빌드·테스트
         run: ./gradlew build
 
+      # Lambda 배포 묶음이 만들어지는지, SAM 템플릿이 올바른지(SAM 변환 포함) 본다
+      - name: Lambda 배포 묶음·템플릿 검사
+        run: |
+          ./gradlew lambdaZip
+          pipx run cfn-lint --regions ap-northeast-2 -- deploy/lambda/template.yaml
+
   docker:
     runs-on: ubuntu-latest
     steps:

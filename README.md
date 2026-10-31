@@ -33,17 +33,25 @@ docker compose up -d
 | `KIS_BASE_URL` | KIS 주소 | 실전 `https://openapi.koreainvestment.com:9443` |
 | `CORS_ALLOWED_ORIGINS` | 프론트 주소(쉼표로 구분). 비어 있으면 다른 출처의 브라우저 요청을 막음 | 없음 (`local` 프로필은 `localhost:5173`, `4173`) |
 | `PORT` | 서버 포트. 배포 플랫폼이 넣어 줌 | `8080` |
-| `JAVA_TOOL_OPTIONS` | JVM 옵션. 사용량 과금 플랫폼에서는 `-Xmx256m`처럼 힙 상한을 정함 | 없음 (이미지는 컨테이너 메모리의 50%) |
+| `JAVA_TOOL_OPTIONS` | JVM 옵션(Docker 이미지로 띄울 때 힙 상한 등) | 없음 (이미지는 컨테이너 메모리의 50%) |
+| `SPRING_PROFILES_ACTIVE` | Lambda에서는 `lambda`(커넥션 풀 2개, SnapStart 훅) | 없음 |
 
 ## 배포
 
-`Dockerfile`(빌드 JDK 21 → 실행 JRE 21, 비루트, `/actuator/health` 헬스체크)로 이미지를 만듭니다. MySQL과 함께 로컬에서 띄워 보려면:
+AWS Lambda(Java 21, SnapStart, Lambda Web Adapter)에 올리고, DB는 RDS MySQL을 씁니다. 코드는 그대로이고 Web Adapter가 Lambda 요청을 HTTP로 바꿔 Spring Boot에 넘깁니다.
+
+```bash
+./gradlew lambdaZip
+sam deploy -t deploy/lambda/template.yaml --guided
+```
+
+Lambda에서 달라지는 점(SnapStart 훅, KIS 토큰 공유), 직접 해야 할 일, 비용: [docs/deploy.md](docs/deploy.md)
+
+서버나 컨테이너 플랫폼에 올릴 때는 `Dockerfile`(빌드 JDK 21 → 실행 JRE 21, 비루트, `/actuator/health` 헬스체크)을 씁니다. MySQL과 함께 로컬에서 띄워 보려면:
 
 ```bash
 docker compose --profile app up -d --build --wait
 ```
-
-플랫폼 비교, Railway·Cloudflare 설정 순서, 메모리 측정: [docs/deploy.md](docs/deploy.md)
 
 ## API
 
